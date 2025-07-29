@@ -28,20 +28,20 @@ def fetch_embeddings(conn) -> tuple[list[str], np.ndarray]:
             rows = cur.fetchall()
         texts = [row[0] for row in rows]
         vectors = np.stack([parse_embedding(row[1]) for row in rows])
-        print(f"✅ Fetched {len(texts)} documents from database.")
+        print(f"Fetched {len(texts)} documents from database.")
         return texts, vectors
     except Exception as e:
-        print(f"❌ Error fetching embeddings: {e}")
+        print(f"Error fetching embeddings: {e}")
         return [], np.array([])
 
 # --- Connect to database ---
 def connect_db():
     try:
         conn = connect(POSTGRES_URL)
-        print("🟢 Connected to PostgreSQL.")
+        print(" Connected to PostgreSQL.")
         return conn
     except Exception as e:
-        print(f"❌ Failed to connect to database: {e}")
+        print(f"Failed to connect to database: {e}")
         return None
 
 # --- Generate embedding for the query ---
@@ -56,7 +56,7 @@ def get_query_embedding(text: str) -> np.ndarray | None:
         )
         return np.array(response["embedding"]) # Completed the function
     except Exception as e:
-        print(f"❌ Failed to embed query: {e}")
+        print(f"Failed to embed query: {e}")
         return None
 
 # --- Search logic ---
@@ -64,7 +64,7 @@ def search_documents(query: str, top_k: int = 5):
     print(f"\n🔍 Searching for: \"{query}\"")
     query_emb = get_query_embedding(query)
     if query_emb is None:
-        print("⚠️ Cannot generate embedding for query.")
+        print("⚠Cannot generate embedding for query.")
         return
 
     conn = connect_db()
@@ -74,20 +74,20 @@ def search_documents(query: str, top_k: int = 5):
     try:
         texts, vectors = fetch_embeddings(conn)
         if not texts or vectors.size == 0:
-            print("⚠️ No embeddings found in database.")
+            print("⚠ No embeddings found in database.")
             return
 
         scores = cosine_similarity([query_emb], vectors)[0]
         top_indices = np.argsort(scores)[::-1][:top_k]
 
-        print("\n📚 Top Results:\n")
+        print("\nTop Results:\n")
         for i, idx in enumerate(top_indices, 1):
             print(f"{i}. Score: {scores[idx]:.4f}")
             print(f"{texts[idx]}\n")
     finally:
         if conn:
             conn.close()
-            print("🔒 Database connection closed.")
+            print("Database connection closed.")
 
 # --- CLI ---
 def main():
